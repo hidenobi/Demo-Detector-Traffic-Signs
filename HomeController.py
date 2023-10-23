@@ -1,5 +1,6 @@
 from flask import Flask, jsonify, request
-from keras.models import load_model
+from tensorflow import keras
+import tensorflow as tf
 import numpy as np
 from PIL import Image
 app = Flask(__name__)
@@ -24,11 +25,9 @@ def receiveData():
     
 
 def processData(data):
-    # try:
-    model = load_model('resources\assign_model.h5')
-    image = np.array(Image.open("resources\img\test.png"))
-    predictions = model.predict(image)
+    model = keras.models.load_model('assign_model.h5')
+    image = np.array(Image.open("test.png"))
+    resized_image = np.reshape(image, (-1, 30, 30, 3))
+    predictions = model.predict(resized_image)
     print(predictions)
     return predictions
-    # except:
-    #     return ""
