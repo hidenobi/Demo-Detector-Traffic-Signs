@@ -155,9 +155,30 @@ assign_model = keras.models.load_model(model_path)
 @app.route('/receive-data',methods = ["POST"])
 def receiveData():
     image = request.files["image"]
-    cv2.imwrite("demo.png", image)
+    # tìm vị trí vật thể
+    image.save("demo.png")
+    results = detector_model("demo.png")
+    results = results[0]
+    position = results.boxes.xyxy.tolist()
+    (h,w) = results.orig_shape
+    top = 0
+    left = 0
+    bottom = h
+    right = w
+    if results.boxes.id != None:
+        top = position[0]
+        left = position[1]
+        bottom = position[2]
+        right = position[3]
+    boxImage = BoxImage(id=-1,top=top,left=left,bottom=bottom,right=right)
+    # tiền xử lý ảnh cho assign model
+    image = cv2.imread("demo.png")
+    # Cắt ảnh theo tọa độ của bốn điểm
+    cropped_image = image[top:bottom,left:right]
+
+    # tìm nhãn của vật thể
     dataList = []
-    image = cv2.imread(image)
+    image = cropped_image
     image_fromarray = Image.fromarray(image, 'RGB')
     resize_image = image_fromarray.resize((IMG_HEIGHT, IMG_WIDTH))
     dataList.append(np.array(resize_image))
