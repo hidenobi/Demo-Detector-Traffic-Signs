@@ -124,6 +124,13 @@ def upload():
     # Trả về thông báo thành công
     return "Image uploaded successfully\nId: " + str(max_index)
 
+detector_model_path = "detector_object.pt"
+detector_model = YOLO(detector_model_path)
+@app.route('/demo_detector',methods = ["POST"])
+def detectorObject():
+    results = detector_model(image_path)
+    print(results)
+    return ""
 
 # main function for demo
 assign_model = keras.models.load_model(model_path)
