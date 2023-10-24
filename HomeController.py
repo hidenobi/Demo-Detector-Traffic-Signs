@@ -9,51 +9,25 @@ from entities.LabelSys import LabelSys
 from entities.BoxImage import BoxImage
 import datetime
 import json
+import mysql.connector
 app = Flask(__name__)
+# cấu hình CDSL
 
-classes = { 0:'Speed limit (20km/h)',
-            1:'Speed limit (30km/h)', 
-            2:'Speed limit (50km/h)', 
-            3:'Speed limit (60km/h)', 
-            4:'Speed limit (70km/h)', 
-            5:'Speed limit (80km/h)', 
-            6:'End of speed limit (80km/h)', 
-            7:'Speed limit (100km/h)', 
-            8:'Speed limit (120km/h)', 
-            9:'No passing', 
-            10:'No passing veh over 3.5 tons', 
-            11:'Right-of-way at intersection', 
-            12:'Priority road', 
-            13:'Yield', 
-            14:'Stop', 
-            15:'No vehicles', 
-            16:'Veh > 3.5 tons prohibited', 
-            17:'No entry', 
-            18:'General caution', 
-            19:'Dangerous curve left', 
-            20:'Dangerous curve right', 
-            21:'Double curve', 
-            22:'Bumpy road', 
-            23:'Slippery road', 
-            24:'Road narrows on the right', 
-            25:'Road work', 
-            26:'Traffic signals', 
-            27:'Pedestrians', 
-            28:'Children crossing', 
-            29:'Bicycles crossing', 
-            30:'Beware of ice/snow',
-            31:'Wild animals crossing', 
-            32:'End speed + passing limits', 
-            33:'Turn right ahead', 
-            34:'Turn left ahead', 
-            35:'Ahead only', 
-            36:'Go straight or right', 
-            37:'Go straight or left', 
-            38:'Keep right', 
-            39:'Keep left', 
-            40:'Roundabout mandatory', 
-            41:'End of no passing', 
-            42:'End no passing veh > 3.5 tons' }
+mydb = mysql.connector.connect(
+  host="localhost",
+  user="sa",
+  password="12345678",
+  database="detectortrafficsigns"
+)
+mycursor = mydb.cursor()
+
+mycursor.execute("SELECT * FROM label_sys")
+
+myresult = mycursor.fetchall()
+classes = []
+for i in myresult:
+    l = LabelSys(id=i[0],name=str(i[2]),dateEdit=i[1])
+    classes.append(l)
 
 IMG_HEIGHT = 30
 IMG_WIDTH = 30
@@ -99,15 +73,9 @@ def receiveData():
     X_test = np.array(dataList)
     X_test = X_test/255
     pred = assign_model.predict(X_test)
-    print('-------------')
     array = pred[0]
     max_index = np.argmax(array)
-    id_label = int(max_index)
-    name_label = classes.get(id_label)
-    current_time = datetime.datetime.now()
-    formatted_time = current_time.strftime("%d-%m-%Y")
-    labelSys = LabelSys(id=id_label,name=name_label,dateEdit=str(formatted_time))
-    print(labelSys)
-    print('-------------')
+    index_label = int(max_index)
+    labelSys = classes[index_label]
     # Trả về thông báo thành công
     return json.dumps(labelSys,default=lambda obj: obj.__dict__)
