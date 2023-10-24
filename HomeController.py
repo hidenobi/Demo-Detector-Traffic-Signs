@@ -129,8 +129,10 @@ detector_model = YOLO(detector_model_path)
 @app.route('/demo_detector',methods = ["POST"])
 def detectorObject():
     results = detector_model(image_path)
+    print("--------------------------")
     print(results)
-    return ""
+    print("--------------------------")
+    return json.dumps(results,default=lambda obj: obj.__dict__)
 
 # main function for demo
 assign_model = keras.models.load_model(model_path)
