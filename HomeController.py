@@ -11,13 +11,6 @@ import datetime
 import json
 app = Flask(__name__)
 
-# Dữ liệu người dùng giả định
-users = [
-    {"id": 1, "name": "John"},
-    {"id": 2, "name": "Alice"},
-    {"id": 3, "name": "Bob"}
-]
-
 classes = { 0:'Speed limit (20km/h)',
             1:'Speed limit (30km/h)', 
             2:'Speed limit (50km/h)', 
@@ -62,93 +55,14 @@ classes = { 0:'Speed limit (20km/h)',
             41:'End of no passing', 
             42:'End no passing veh > 3.5 tons' }
 
-
-@app.route('/api/users', methods=['GET'])
-def get_users():
-    return jsonify(users)
-
-@app.route("/api/receive-data",methods = ['POST'])
-def receiveDataTest():
-    data = request.get_json()
-    print(data)
-    result = int(processData(data))
-    return jsonify(result)
-    
 IMG_HEIGHT = 30
 IMG_WIDTH = 30
 channels = 3
 model_path = 'assign_model.h5'
 image_path = 'test.png'
-def processData(data):
-    dataList = []
-    model = keras.models.load_model(model_path)
-    image = cv2.imread(image_path)
-    image_fromarray = Image.fromarray(image, 'RGB')
-    resize_image = image_fromarray.resize((IMG_HEIGHT, IMG_WIDTH))
-    dataList.append(np.array(resize_image))
-    X_test = np.array(dataList)
-    X_test = X_test/255
-    pred = model.predict(X_test)
-    print('-------------')
-    array = pred[0]
-    print(len(array))
-    print(type(array))
-    max_index = np.argmax(array)
-    print(max_index)
-    print('-------------')
-    return max_index
-
-@app.route("/api/upload", methods=["POST"])
-def upload():
-    image = request.files["image"]
-    name = request.form.get("name")
-    name = "name "+str(name)
-    print(name)
-    # Lưu ảnh vào thư mục "images"
-    cv2.imwrite("demo.png", image)
-    dataList = []
-    model = keras.models.load_model(model_path)
-    image = cv2.imread(image)
-    image_fromarray = Image.fromarray(image, 'RGB')
-    resize_image = image_fromarray.resize((IMG_HEIGHT, IMG_WIDTH))
-    dataList.append(np.array(resize_image))
-    X_test = np.array(dataList)
-    X_test = X_test/255
-    pred = model.predict(X_test)
-    print('-------------')
-    array = pred[0]
-    print(len(array))
-    print(type(array))
-    max_index = np.argmax(array)
-    print(max_index)
-    print('-------------')
-    # Trả về thông báo thành công
-    return "Image uploaded successfully\nId: " + str(max_index)
 
 detector_model_path = "detector_object.pt"
 detector_model = YOLO(detector_model_path)
-@app.route('/demo_detector',methods = ["POST"])
-def detectorObject():
-    image = request.files["image"]
-    image.save("demo.png")
-    results = detector_model("demo.png")
-    print("--------------------------")
-    results = results[0]
-    position = results.boxes.xyxy.tolist()
-    (h,w) = results.orig_shape
-    top = 0
-    left = 0
-    bottom = h
-    right = w
-    if results.boxes.id != None:
-        top = position[0]
-        left = position[1]
-        bottom = position[2]
-        right = position[3]
-    boxImage = BoxImage(id=-1,top=top,left=left,bottom=bottom,right=right)
-    print(results.names)
-    print("--------------------------")
-    return json.dumps(boxImage,default=lambda obj: obj.__dict__)
 
 # main function for demo
 assign_model = keras.models.load_model(model_path)
