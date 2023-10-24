@@ -6,6 +6,7 @@ from PIL import Image
 import cv2
 from ultralytics import YOLO
 from entities.LabelSys import LabelSys
+from entities.BoxImage import BoxImage
 import datetime
 import json
 app = Flask(__name__)
@@ -128,11 +129,25 @@ detector_model_path = "detector_object.pt"
 detector_model = YOLO(detector_model_path)
 @app.route('/demo_detector',methods = ["POST"])
 def detectorObject():
-    results = detector_model(image_path)
+    image = request.files["image"]
+    image.save("demo.png")
+    results = detector_model("demo.png")
     print("--------------------------")
-    print(results)
+    results = results[0]
+    position = results.boxes.xyxy.tolist()
+    (w,h) = results.orig_shape
+    top = 0
+    left = 0
+    bottom = h
+    right = w
+    if results.boxes.id != None:
+        top = position[0]
+        left = position[1]
+        bottom = position[2]
+        right = position[3]
+    boxImage = BoxImage(id=-1,top=top,left=left,bottom=bottom,right=right)
     print("--------------------------")
-    return json.dumps(results,default=lambda obj: obj.__dict__)
+    return json.dumps(boxImage,default=lambda obj: obj.__dict__)
 
 # main function for demo
 assign_model = keras.models.load_model(model_path)
