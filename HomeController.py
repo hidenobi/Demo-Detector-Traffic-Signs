@@ -135,7 +135,7 @@ def detectorObject():
     print("--------------------------")
     results = results[0]
     position = results.boxes.xyxy.tolist()
-    (w,h) = results.orig_shape
+    (h,w) = results.orig_shape
     top = 0
     left = 0
     bottom = h
@@ -146,6 +146,7 @@ def detectorObject():
         bottom = position[2]
         right = position[3]
     boxImage = BoxImage(id=-1,top=top,left=left,bottom=bottom,right=right)
+    print(results.names)
     print("--------------------------")
     return json.dumps(boxImage,default=lambda obj: obj.__dict__)
 
