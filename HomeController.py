@@ -5,6 +5,9 @@ import numpy as np
 from PIL import Image
 import cv2
 from ultralytics import YOLO
+from entities.LabelSys import LabelSys
+import datetime
+import json
 app = Flask(__name__)
 
 # Dữ liệu người dùng giả định
@@ -64,7 +67,7 @@ def get_users():
     return jsonify(users)
 
 @app.route("/api/receive-data",methods = ['POST'])
-def receiveData():
+def receiveDataTest():
     data = request.get_json()
     print(data)
     result = int(processData(data))
@@ -120,3 +123,31 @@ def upload():
     print('-------------')
     # Trả về thông báo thành công
     return "Image uploaded successfully\nId: " + str(max_index)
+
+
+# main function for demo
+assign_model = keras.models.load_model(model_path)
+@app.route('/receive-data',methods = ["POST"])
+def receiveData():
+    image = request.files["image"]
+    cv2.imwrite("demo.png", image)
+    dataList = []
+    image = cv2.imread(image)
+    image_fromarray = Image.fromarray(image, 'RGB')
+    resize_image = image_fromarray.resize((IMG_HEIGHT, IMG_WIDTH))
+    dataList.append(np.array(resize_image))
+    X_test = np.array(dataList)
+    X_test = X_test/255
+    pred = assign_model.predict(X_test)
+    print('-------------')
+    array = pred[0]
+    max_index = np.argmax(array)
+    id_label = int(max_index)
+    name_label = classes.get(id_label)
+    current_time = datetime.datetime.now()
+    formatted_time = current_time.strftime("%d-%m-%Y")
+    labelSys = LabelSys(id=id_label,name=name_label,dateEdit=str(formatted_time))
+    print(labelSys)
+    print('-------------')
+    # Trả về thông báo thành công
+    return json.dumps(labelSys,default=lambda obj: obj.__dict__)
