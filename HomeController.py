@@ -7,6 +7,9 @@ import cv2
 from ultralytics import YOLO
 from entities.LabelSys import LabelSys
 from entities.BoxImage import BoxImage
+from entities.AnswerSys import AnswerSys
+from entities.ResultSys import ResultSys
+from entities.ImageSys import ImageSys
 import datetime
 import json
 import mysql.connector
@@ -33,7 +36,7 @@ IMG_HEIGHT = 30
 IMG_WIDTH = 30
 channels = 3
 model_path = 'assign_model.h5'
-image_path = 'test.png'
+image_path = 'demo.png'
 
 detector_model_path = "detector_object.pt"
 detector_model = YOLO(detector_model_path)
@@ -43,9 +46,10 @@ assign_model = keras.models.load_model(model_path)
 @app.route('/receive-data',methods = ["POST"])
 def receiveData():
     image = request.files["image"]
+    id_result = int(request.form.get("id"))
     # tìm vị trí vật thể
-    image.save("demo.png")
-    results = detector_model("demo.png")
+    image.save(image_path)
+    results = detector_model(image_path)
     results = results[0]
     position = results.boxes.xyxy.tolist()
     (h,w) = results.orig_shape
@@ -60,7 +64,7 @@ def receiveData():
         right = position[3]
     boxImage = BoxImage(id=-1,top=top,left=left,bottom=bottom,right=right)
     # tiền xử lý ảnh cho assign model
-    image = cv2.imread("demo.png")
+    image = cv2.imread(image_path)
     # Cắt ảnh theo tọa độ của bốn điểm
     cropped_image = image[top:bottom,left:right]
 
@@ -77,5 +81,12 @@ def receiveData():
     max_index = np.argmax(array)
     index_label = int(max_index)
     labelSys = classes[index_label]
+
+    # xử lý kết quả
+    imageSys = ImageSys(id=id_result,path=image_path) 
+    answerSys = AnswerSys(id=id_result,boxImage=boxImage,labelSys=labelSys)
+    listAnswer = []
+    listAnswer.append(answerSys)
+    resultSys = ResultSys(id=id_result,imageSys=imageSys,listAnswer=listAnswer)
     # Trả về thông báo thành công
-    return json.dumps(labelSys,default=lambda obj: obj.__dict__)
+    return json.dumps(resultSys,default=lambda obj: obj.__dict__)
