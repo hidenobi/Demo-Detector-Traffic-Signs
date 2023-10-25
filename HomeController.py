@@ -35,6 +35,24 @@ for i in myresult:
 classes_backup = { 0:'Speed limit (20km/h)',
             1:'Speed limit (30km/h)', 
             2:'Speed limit (50km/h)', 
+            3:'Speed limit (60km/h)', 
+            4:'Speed limit (70km/h)', 
+            5:'Speed limit (80km/h)', 
+            6:'End of speed limit (80km/h)', 
+            7:'Speed limit (100km/h)', 
+            8:'Speed limit (120km/h)', 
+            9:'No passing', 
+            10:'No passing veh over 3.5 tons', 
+            11:'Right-of-way at intersection', 
+            12:'Priority road', 
+            13:'Yield', 
+            14:'Stop', 
+            15:'No vehicles', 
+            16:'Veh > 3.5 tons prohibited', 
+            17:'No entry', 
+            18:'General caution', 
+            19:'Dangerous curve left', 
+            20:'Dangerous curve right', 
             21:'Double curve', 
             22:'Bumpy road', 
             23:'Slippery road', 
@@ -74,6 +92,7 @@ def receiveData():
     try:
         image = request.files["image"]
         id_result = int(request.form.get("id"))
+        image_path = request.form.get("path")
         # tìm vị trí vật thể
         image.save(image_path)
         results = detector_model(image_path)
@@ -109,7 +128,7 @@ def receiveData():
         index_label = int(max_index)
         labelSys = None
         try:
-            labelSys = classes[index_label]
+            labelSys = list(filter(lambda item: item.id == (index_label+1),classes))[0]
         except:
             id_label = int(max_index)
             name_label = classes_backup.get(id_label)
